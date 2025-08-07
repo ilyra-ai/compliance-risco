@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sistema de Compliance e Due Diligence - Design System */
+
+@layer base {
+  :root {
+    /* Core colors - Professional compliance theme */
+    --background: 243 44% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary - Black in light mode */
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 0% 20%;
+
+    /* Secondary - Sophisticated navy */
+    --secondary: 223 39% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted - Soft grays */
+    --muted: 223 13% 96%;
+    --muted-foreground: 223 13% 45%;
+
+    /* Accent - Compliance green */
+    --accent: 142 69% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status colors */
+    --success: 142 69% 58%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 13% 91%;
+    --input: 223 13% 91%;
+    --ring: 212 100% 25%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 69% 68%));
+    --gradient-warning: linear-gradient(135deg, hsl(var(--warning)), hsl(38 92% 60%));
+    --gradient-danger: linear-gradient(135deg, hsl(var(--destructive)), hsl(0 84% 70%));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
+    --shadow-medium: 0 8px 25px -5px hsl(var(--primary) / 0.15);
+    --shadow-large: 0 20px 40px -12px hsl(var(--primary) / 0.25);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark theme for compliance system */
+    --background: 223 39% 7%;
+    --foreground: 0 0% 95%;
+
+    --card: 223 39% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 223 39% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 212 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 212 100% 65%;
+
+    --secondary: 223 39% 20%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 223 39% 15%;
+    --muted-foreground: 223 13% 65%;
+
+    --accent: 142 69% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 142 69% 48%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 39% 20%;
+    --input: 223 39% 20%;
+    --ring: 212 100% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-imprima;
+  }
+}
