@@ -104,53 +104,35 @@ export class APIClient {
    */
   static async consultarCPF(cpf: string): Promise<APIResponse<CPFData>> {
     const cleanCPF = cpf.replace(/\D/g, '');
-    
-    // Tenta múltiplas fontes para dados de CPF
-    const sources = [
-      `https://api.consultacpf.org.br/v1/cpf/${cleanCPF}`,
-      `https://consultacpf.net/api/v1/cpf/${cleanCPF}`,
-      `https://cpf.dev.br/api/v1/cpf/${cleanCPF}`
-    ];
-
-    for (const source of sources) {
-      try {
-        const response = await this.makeRequest(source);
-        
-        if (response.success && response.data) {
-          return {
-            success: true,
-            data: {
-              cpf: cleanCPF,
-              nome: response.data.nome || response.data.name || `Pessoa Física ${cleanCPF.slice(-4)}`,
-              status: response.data.status || response.data.situacao || 'ATIVO',
-              situacao_receita: response.data.situacao_receita || response.data.status_receita || 'REGULAR',
-              data_nascimento: response.data.data_nascimento || response.data.birth_date,
-              endereco: response.data.endereco || response.data.address
-            },
-            source,
-            timestamp: new Date().toISOString()
-          };
-        }
-      } catch (error) {
-        console.warn(`Falha ao consultar CPF em ${source}:`, error);
-        continue;
-      }
-    }
-
-    // Se todas as APIs falharem, tenta consulta via serviços públicos
+    const url = `https://ws.hubdodesenvolvedor.com.br/v2/cpf/?cpf=${cleanCPF}&token=${this.getPublicApiKey()}`;
     try {
-      const consultaPublica = await this.consultarDadosPublicos(cleanCPF);
-      if (consultaPublica.success) {
-        return consultaPublica;
+      const response = await this.makeRequest(url);
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: {
+            cpf: cleanCPF,
+            nome: response.data.nome,
+            status: response.data.status,
+            situacao_receita: response.data.situacao_receita,
+            data_nascimento: response.data.data_nascimento,
+            endereco: response.data.endereco
+          },
+          source: url,
+          timestamp: new Date().toISOString()
+        };
       }
     } catch (error) {
-      console.warn('Falha na consulta pública:', error);
+      console.warn('Falha ao consultar CPF:', error);
     }
-
+    const consultaPublica = await this.consultarDadosPublicos(cleanCPF);
+    if (consultaPublica.success) {
+      return consultaPublica;
+    }
     return {
       success: false,
-      error: 'CPF não encontrado ou dados indisponíveis nas fontes consultadas',
-      source: 'multiple',
+      error: 'CPF não encontrado',
+      source: url,
       timestamp: new Date().toISOString()
     };
   }
@@ -195,105 +177,58 @@ export class APIClient {
   }
 
   private static getPublicApiKey(): string {
-    // Em produção, usar variável de ambiente
-    return 'public_api_key_here';
+    return process.env.PUBLIC_API_KEY || '';
   }
 
   /**
    * Consulta sanções no CADIN
    */
   static async consultarCADIN(documento: string): Promise<APIResponse> {
+    const url = `https://api.portaldatransparencia.gov.br/api-de-dados/cadin?cpfCnpj=${documento}&pagina=1`;
     try {
-      // Simulação de consulta ao CADIN
-      // Em produção: https://dados.gov.br/dataset/cadin
-      const hasRestriction = Math.random() > 0.7; // 30% chance de ter restrição
-      
-      return {
-        success: true,
-        data: {
-          documento,
-          encontrado: hasRestriction,
-          detalhes: hasRestriction ? [
-            {
-              orgao: 'INSS',
-              valor: 'R$ 25.000,00',
-              situacao: 'INSCRITO',
-              data_inscricao: '2023-06-15'
-            }
-          ] : []
-        },
-        source: 'cadin_gov_br',
-        timestamp: new Date().toISOString()
-      };
+      const response = await fetch(url, { headers: { 'Accept': 'application/json', 'chave-api-dados-abertos': this.getPublicApiKey() } });
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data, source: 'portal_transparencia_cadin', timestamp: new Date().toISOString() };
+      }
     } catch (error) {
-      return {
-        success: false,
-        error: 'Erro ao consultar CADIN',
-        source: 'cadin_gov_br',
-        timestamp: new Date().toISOString()
-      };
+      console.warn('Erro ao consultar CADIN:', error);
     }
+    return { success: false, error: 'Erro ao consultar CADIN', source: 'portal_transparencia_cadin', timestamp: new Date().toISOString() };
   }
 
   /**
    * Consulta lista de sanções ONU
    */
   static async consultarSancoesONU(nome: string): Promise<APIResponse> {
+    const url = 'https://scsanctions.un.org/resources/xml/en/consolidated.xml';
     try {
-      // Simulação de consulta às sanções da ONU
-      // Em produção: https://scsanctions.un.org/resources/xml/en/consolidated.xml
-      return {
-        success: true,
-        data: {
-          encontrado: false,
-          lista_checada: 'UN_CONSOLIDATED_LIST',
-          detalhes: []
-        },
-        source: 'un_sanctions',
-        timestamp: new Date().toISOString()
-      };
+      const response = await fetch(url);
+      if (response.ok) {
+        const text = await response.text();
+        const found = text.toUpperCase().includes(nome.toUpperCase());
+        return { success: true, data: { encontrado: found }, source: 'un_sanctions', timestamp: new Date().toISOString() };
+      }
     } catch (error) {
-      return {
-        success: false,
-        error: 'Erro ao consultar sanções ONU',
-        source: 'un_sanctions',
-        timestamp: new Date().toISOString()
-      };
+      console.warn('Erro ao consultar sanções ONU:', error);
     }
+    return { success: false, error: 'Erro ao consultar sanções ONU', source: 'un_sanctions', timestamp: new Date().toISOString() };
   }
 
   /**
    * Consulta processos no JusBrasil
    */
   static async consultarProcessos(documento: string): Promise<APIResponse> {
+    const url = `https://api-publica.datajud.app/pessoas/${documento}/processos`;
     try {
-      // Simulação de busca de processos
-      // Em produção integraria com APIs dos tribunais
-      const numProcessos = Math.floor(Math.random() * 10);
-      
-      return {
-        success: true,
-        data: {
-          total_encontrados: numProcessos,
-          processos: Array.from({ length: numProcessos }, (_, i) => ({
-            numero: `0000000-00.0000.0.00.0000`,
-            tribunal: ['TRF1', 'TJ-SP', 'TST'][Math.floor(Math.random() * 3)],
-            assunto: ['Cível', 'Trabalhista', 'Fiscal'][Math.floor(Math.random() * 3)],
-            status: ['Em andamento', 'Arquivado', 'Suspenso'][Math.floor(Math.random() * 3)],
-            data_distribuicao: '2023-01-15'
-          }))
-        },
-        source: 'jusbrasil_simulado',
-        timestamp: new Date().toISOString()
-      };
+      const response = await this.makeRequest(url);
+      if (response.success) {
+        return { success: true, data: response.data, source: url, timestamp: new Date().toISOString() };
+      }
     } catch (error) {
-      return {
-        success: false,
-        error: 'Erro ao consultar processos judiciais',
-        source: 'jusbrasil',
-        timestamp: new Date().toISOString()
-      };
+      console.warn('Erro ao consultar processos judiciais:', error);
     }
+    return { success: false, error: 'Erro ao consultar processos judiciais', source: url, timestamp: new Date().toISOString() };
   }
 
   /**
